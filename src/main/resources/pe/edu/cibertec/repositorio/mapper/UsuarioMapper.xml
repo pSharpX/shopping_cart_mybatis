@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pe.edu.cibertec.repositorio.mapper.UsuarioMapper">
+    <resultMap type="pe.edu.cibertec.dominio.Usuario" id="usuario">
+        <id column="id" property="id" />
+        <result column="nombre" property="nombre" />
+        <result column="apellido" property="apellido" />
+        <result column="fecha_nacimiento" property="fechaNacimiento" />
+    </resultMap>
+    
+    <sql id="columnsUsuario">
+        nombre, apellido, fecha_nacimiento
+    </sql>
+    
+    <select id="selectUsuario" resultMap="usuario">
+        select
+            id,
+            <include refid="columnsUsuario" />
+        from Usuario
+        where id = #{id}
+    </select>
+    
+    <select id="selectAllUsuario" resultMap="usuario">
+        select
+            id,
+            <include refid="columnsUsuario" />
+        from Usuario
+    </select>
+    
+    <insert parameterType="pe.edu.cibertec.dominio.Usuario" 
+            useGeneratedKeys="true" 
+            keyColumn="id" keyProperty="id"
+            id="insertUsuario">
+        insert into usuario (<include refid="columnsUsuario" />)
+        values (#{nombre}, #{apellido}, #{fechaNacimiento})
+    </insert>
+    
+    <update parameterType="pe.edu.cibertec.dominio.Usuario" id="updateUsuario">
+        update usuario 
+        set 
+            nombre = #{nombre}, 
+            apellido = #{apellido}, 
+            fecha_nacimiento = #{fechaNacimiento}
+        where id = #{id}
+    </update>
+    
+    <delete parameterType="long" id="deleteUsuario">
+        delete from usuario
+        where id = #{id}
+    </delete>
+</mapper>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pe.edu.cibertec.repositorio.mapper.ProductoMapper">
+    <resultMap type="pe.edu.cibertec.dominio.Producto" id="producto">
+        <id column="id" property="id" />
+        <result column="nombre" property="nombre" />
+        <result column="descripcion" property="descripcion" />
+        <result column="precio" property="precio" />
+        <association property="categoria"
+            javaType="pe.edu.cibertec.dominio.Categoria">
+            <id column="idCategoria" property="id" />
+            <result column="nombreCategoria" property="nombre" />
+        </association>
+    </resultMap>
+    
+    <sql id="columnsProducto">
+        nombre, descripcion, precio
+    </sql>
+    
+    <select id="selectProducto" resultMap="producto">
+        select
+            p.id, p.nombre, p.descripcion, p.precio,
+            c.id as idCategoria,
+            c.nombre as nombreCategoria            
+        from tab_producto p
+            inner join categoria c on c.id = p.id_categoria
+        where p.id = #{id}
+    </select>
+    
+    <select id="selectAllProducto" resultMap="producto">
+        select
+            id,
+            <include refid="columnsProducto" />
+        from tab_producto
+    </select>
+    
+    <insert parameterType="pe.edu.cibertec.dominio.Producto" 
+            useGeneratedKeys="true" 
+            keyColumn="id" keyProperty="id"
+            id="insertProducto">
+        insert into tab_producto (<include refid="columnsProducto" />, imagen, id_categoria)
+        values (#{nombre}, #{descripcion}, #{precio}, #{imagen}, #{categoria.id})
+    </insert>
+    
+    <update parameterType="pe.edu.cibertec.dominio.Producto" id="updateProducto">
+        update tab_producto 
+        set 
+            nombre = #{nombre}, 
+            descripcion = #{descripcion}, 
+            precio = #{precio}
+        where id = #{id}
+    </update>
+    
+    <delete parameterType="long" id="deleteProducto">
+        delete from tab_producto
+        where id = #{id}
+    </delete>
+    
+    <select id="selectProductosUltimoMes" resultMap="producto"
+        parameterType="BusquedaProducto">
+        select
+        pr.id,
+        pr.nombre,
+        descripcion,
+        precio,
+        imagen,
+        ca.id AS codigo_Categoria,
+        ca.nombre AS nombreCategoria
+       from tab_producto pr
+         inner join categoria ca on pr.id_categoria = ca.id
+       where pr.id in (
+       select distinct p.id
+       from tab_producto p
+        inner join detalle_carrito dc on dc.id_producto = p.id
+        inner join carrito c on c.id = dc.id_carrito
+       where
+         TIMESTAMPDIFF(MONTH, date(fecha_compra), curdate()) >= #{cantidadMeses}
+        <if test="idCategoria != null and idCategoria > 0">
+            and p.id_categoria = #{idCategoria}
+        </if>         
+       )
+
+    </select>
+    
+    <select id="selectProductosUltimoMesProcedure" resultMap="producto"
+        parameterType="BusquedaProducto">
+        { call productosTop(#{cantidadMeses}, #{idCategoria})}
+    </select>
+</mapper>
